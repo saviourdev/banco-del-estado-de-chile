@@ -1,273 +1,305 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wallet Real — CLP</title>
+<title>Portfel Real — CLP</title>
 
 <style>
 :root{
-  --bg:#fafafa; --card:#0b6ef7; --radius:14px; --panel:#fff; --muted:#777;
+  --bg:linear-gradient(180deg,#6f8fd6 0%,#3e63b8 45%,#0e1a33 100%);
+  --primary:#3e63b8;
+  --panel:#ffffff;
+  --muted:#777;
+  --radius:16px;
 }
-body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg)}
-.container{background:#fff;padding:30px;width:320px;margin:40px auto;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.1)}
-input,button{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #ccc}
-button{background:#0b6ef7;color:#fff;border:none;font-weight:700;cursor:pointer}
-.app{max-width:900px;margin:20px auto;padding:12px;display:none}
-.card{background:var(--card);color:#fff;border-radius:var(--radius);padding:20px}
-.balance{font-size:1.8rem;font-weight:800}
-.actions{display:flex;gap:12px;margin:14px 0}
-.action{flex:1;background:#0b6ef7;color:#fff;text-align:center;padding:12px;border-radius:12px;cursor:pointer;font-weight:700}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.panel{background:var(--panel);padding:14px;border-radius:12px}
-.tx-list{max-height:360px;overflow:auto}
-.tx{display:flex;justify-content:space-between;padding:10px;background:#f7f7f7;border-radius:8px;margin-bottom:8px}
-.muted{color:var(--muted);font-size:.85rem}
-.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
-.modal{background:#fff;padding:20px;border-radius:14px;width:340px}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;display:none}
-hr{border:none;border-top:1px solid #eee;margin:10px 0}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Arial;
+  background:var(--bg);
+  min-height:100vh;
+}
+.hidden{display:none}
+
+.header{
+  padding:14px 16px;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(10px);
+  color:#fff;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.header span{font-weight:700}
+
+.app{
+  max-width:900px;
+  margin:0 auto;
+  padding:14px;
+  padding-bottom:90px;
+}
+.card{
+  background:linear-gradient(160deg,#4f7cf0,#2e4fa3);
+  color:#fff;
+  padding:20px;
+  border-radius:var(--radius);
+}
+.balance{font-size:2rem;font-weight:800;margin-top:6px}
+
+.actions{
+  display:flex;
+  gap:12px;
+  margin:16px 0;
+}
+.action{
+  flex:1;
+  background:linear-gradient(160deg,#4f7cf0,#2e4fa3);
+  color:#fff;
+  text-align:center;
+  padding:14px;
+  border-radius:14px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.panel{
+  background:rgba(255,255,255,.92);
+  border-radius:14px;
+  padding:14px;
+}
+.tx{
+  background:rgba(62,99,184,.1);
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:8px;
+  display:flex;
+  justify-content:space-between;
+}
+.muted{color:var(--muted);font-size:.85rem;margin-top:10px}
+
+.frozen-note{
+  margin-top:16px;
+  padding:14px;
+  border-radius:12px;
+  background:rgba(255,0,0,.08);
+  color:#900;
+  font-weight:600;
+  text-align:center;
+}
+
+.nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:rgba(0,0,0,.6);
+  backdrop-filter:blur(12px);
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+}
+.nav-item{
+  color:#cfd6ff;
+  text-align:center;
+  font-size:.75rem;
+  cursor:pointer;
+}
+.nav-item.active{color:#1de9b6}
+.nav-item div{font-size:20px}
+
+.modal-back{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal{
+  background:#fff;
+  padding:20px;
+  border-radius:16px;
+  width:320px;
+  text-align:center;
+}
+
+.toast{
+  position:fixed;
+  bottom:100px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111;
+  color:#0ff;
+  padding:10px 16px;
+  border-radius:10px;
+  display:none;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container" id="signup">
-  <h2>Register</h2>
-  <input id="name" placeholder="Full name">
-  <input id="phone" placeholder="Phone number">
-  <button id="signupBtn">Register</button>
+<div class="header">
+  <span id="pageTitle">Home</span>
+  <button onclick="logout()" style="background:#0003;color:#fff;border:none;padding:6px 10px;border-radius:8px">Wyloguj</button>
 </div>
-<button id="logoutBtn" style="margin:12px 0;background:#eee;color:#111;font-weight:700">
-  Logout
-</button>
-<div class="app" id="app">
+
+<div class="app" id="home">
   <div class="card">
-    <div>Wallet balance</div>
-    <div class="balance" id="balance">0 CLP</div>
+    <div>Saldo portfela</div>
+    <div class="balance" id="balance">40,500,000.00 CLP</div>
   </div>
 
   <div class="actions">
-    <div class="action" id="transferBtn">Transfer</div>
-    <div class="action" id="withdrawBtn">Withdraw</div>
-    <div class="action" id="billsBtn">Pay Bills</div>
+    <div class="action" onclick="showFrozenModal()">Przelew</div>
+    <div class="action" onclick="showFrozenModal()">Wypłata</div>
+    <div class="action" onclick="showFrozenModal()">Opłać rachunki</div>
   </div>
 
   <div class="grid">
     <div class="panel">
-      <strong>Transaction History</strong>
-      <div class="tx-list" id="txList"></div>
+      <strong>Historia transakcji</strong>
+      <div id="txList"></div>
     </div>
     <div class="panel">
-      <strong>Account Info</strong>
-      <p class="muted">Level 4 • Verified</p>
-      <p class="muted">Do not share your details</p>
+      <strong>Informacje o koncie</strong>
+      <p class="muted">Poziom 4 • Zweryfikowane</p>
+      <p class="muted">Nie udostępniaj swoich danych</p>
     </div>
   </div>
+</div>
+
+<div class="app hidden" id="finance">
+  <div class="panel">
+    <h3>Finanse</h3>
+    <p class="muted">Analiza wydatków i przychodów</p>
+    <p><strong>Miesięczne wydatki:</strong> 615 000 CLP</p>
+    <p><strong>Oszczędności:</strong> 2 300 000 CLP</p>
+  </div>
+</div>
+
+<div class="app hidden" id="rewards">
+  <div class="panel">
+    <h3>Nagrody</h3>
+    <p class="muted">Dostępne punkty</p>
+    <h2>12 450 pkt</h2>
+    <button onclick="showFrozenModal()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--primary);color:#fff">
+      Wymień nagrody
+    </button>
+  </div>
+</div>
+
+<div class="app hidden" id="cards">
+  <div class="panel">
+    <h3>Karty</h3>
+    <div class="card">
+      <div>Karta wirtualna</div>
+      <div class="balance">**** 4921</div>
+      <p class="muted">Aktywna</p>
+    </div>
+  </div>
+</div>
+
+<div class="app hidden" id="me">
+  <div class="panel">
+    <h3>Mój profil</h3>
+    <p><strong>Status:</strong> Zweryfikowany</p>
+    <p><strong>Kraj:</strong> Polska</p>
+    <p><strong>Waluta:</strong> CLP</p>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-item active" onclick="switchTab('home',this)"><div>🏠</div>Home</div>
+  <div class="nav-item" onclick="switchTab('rewards',this)"><div>🎁</div>Nagrody</div>
+  <div class="nav-item" onclick="switchTab('finance',this)"><div>📈</div>Finanse</div>
+  <div class="nav-item" onclick="switchTab('cards',this)"><div>💳</div>Karty</div>
+  <div class="nav-item" onclick="switchTab('me',this)"><div>👤</div>Ja</div>
 </div>
 
 <div class="modal-back" id="modalBack">
   <div class="modal" id="modal"></div>
 </div>
 
-<div class="toast" id="toast">Saved</div>
+<div class="toast" id="toast"></div>
 
 <script>
-const CLP_TO_PLN = 0.0046;
-const ZANGI_LINK = "https://services.zangi.com/dl/conversation/1093014713";
-let balance = 30500000;
-const $ = id => document.getElementById(id);
-const fmtCLP = n => n.toLocaleString('es-CL');
-const convertToPLN = clp => (clp * CLP_TO_PLN).toFixed(2);
+let balanceValue = 30500000;
 let tx = [];
 
-function showToast(msg){
-  $('toast').textContent = msg;
-  $('toast').style.display = 'block';
-  setTimeout(()=> $('toast').style.display='none',2000);
-}
-let generatedOTP = null;
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('pl-PL');
 
-$('signupBtn').onclick = () => {
-  const name = $('name').value.trim();
-  const phone = $('phone').value.trim();
-
-  if (!name || !phone) {
-    showToast('Enter name and phone');
-    return;
-  }
-
-  generatedOTP = Math.floor(100000 + Math.random() * 900000);
-
-  openModal(`
-    <h3>OTP Verification</h3>
-    <p class="muted">Demo OTP (shown for testing):</p>
-    <strong style="font-size:20px">${generatedOTP}</strong>
-    <input id="otpInput" type="number" placeholder="Enter OTP">
-    <button id="verifyOtp">Verify</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
-  `);
-
-  $('verifyOtp').onclick = () => {
-    const entered = Number($('otpInput').value);
-
-    if (entered === generatedOTP) {
-      closeModal();
-      $('signup').style.display = 'none';
-      $('app').style.display = 'block';
-      renderBalance();
-      renderTx();
-      showToast('Login successful');
-      generatedOTP = null;
-    } else {
-      showToast('Invalid OTP');
-    }
-  };
-};
-
-function renderBalance(){
-  $('balance').textContent = fmtCLP(balance) + ' CLP';
+function showToast(t){
+  toast.textContent=t;
+  toast.style.display='block';
+  setTimeout(()=>toast.style.display='none',2000);
 }
 
-function renderTx(){
-  const list = $('txList'); 
-  list.innerHTML='';
-  tx.slice().reverse().forEach(t=>{
-    const d=document.createElement('div'); 
+function addFrozenNote(container){
+  if(container.querySelector('.frozen-note')) return;
+  const note=document.createElement('div');
+  note.className='frozen-note';
+  note.innerHTML='Konto zostało zamrożone po śmierci śp. Pana Rocha Wróbla Janik';
+  container.appendChild(note);
+}
+
+function switchTab(id,el){
+  document.querySelectorAll('.app').forEach(a=>a.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const app=$(id);
+  app.classList.remove('hidden');
+  el.classList.add('active');
+  pageTitle.textContent=el.innerText;
+  if(id!=='home') addFrozenNote(app);
+}
+
+function showFrozenModal(){
+  modal.innerHTML=`
+    <h3>Konto zablokowane</h3>
+    <p class="muted">
+    To konto zostało zamrożone po śmierci zmarłego<br>
+      <strong>Pan Roch Wróbel Janik</strong>
+    </p>
+    <button onclick="modalBack.style.display='none'">Zamknij</button>
+  `;
+  modalBack.style.display='flex';
+}
+
+function logout(){
+  showToast('Wylogowano');
+}
+
+function render(){
+  balance.textContent = fmt(balanceValue)+' CLP';
+  txList.innerHTML='';
+  tx.forEach(t=>{
+    const d=document.createElement('div');
     d.className='tx';
     d.innerHTML=`
       <div>
         <strong>${t.type}</strong>
-        <div class="muted">${t.name} • ${t.account}</div>
-        <div class="muted">${t.date}</div>
+        <div class="muted">${t.name}</div>
       </div>
-      <div><strong>- ${fmtCLP(t.amount)} CLP</strong></div>`;
-    list.appendChild(d);
+      <div><strong>- ${fmt(t.amount)} CLP</strong></div>
+    `;
+    txList.appendChild(d);
   });
 }
 
-function openModal(html){
-  $('modal').innerHTML=html; 
-  $('modalBack').style.display='flex';
-}
-function closeModal(){
-  $('modalBack').style.display='none';
-}
-
-$('withdrawBtn').onclick = () => {
-  openModal(`
-    <h3>Withdraw</h3>
-    <input id="amount" type="number" placeholder="Add amount (CLP)">
-    <div id="convert" class="muted">Converted: 0 zł</div>
-    <button id="done">Done</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
-  `);
-  $('amount').oninput=()=>{
-    $('convert').textContent='Converted: '+convertToPLN(Number($('amount').value||0))+' zł';
-  };
-  $('done').onclick=()=>{
-    showToast('Withdrawal submitted'); 
-    closeModal();
-  };
-};
-
-$('billsBtn').onclick = () => {
-  openModal(`
-    <h3>Pay Bills</h3>
-    <input id="bill" placeholder="Bill name">
-    <input id="bamt" type="number" placeholder="Amount (CLP)">
-    <button id="pay">Done</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
-  `);
-  $('pay').onclick=()=>{
-    const amt=Number($('bamt').value);
-    tx.push({
-      type:'Bill Payment',
-      name:$('bill').value,
-      account:'—',
-      amount:amt,
-      date:new Date().toDateString()
-    });
-    balance-=amt; 
-    renderBalance(); 
-    renderTx(); 
-    showToast('Bill paid'); 
-    closeModal();
-  };
-};
-
-$('transferBtn').onclick = () => {
-  openModal(`
-    <h3>Bank Transfer</h3>
-    <input id="tname" placeholder="Account holder name">
-    <input id="tacc" placeholder="Account number">
-    <input id="tamt" type="number" placeholder="Amount (CLP)">
-    <button id="send">Done</button>
-    <button onclick="closeModal()" style="background:#eee;color:#111">Close</button>
-  `);
-
-  $('send').onclick = () => {
-    const name=$('tname').value.trim();
-    const acc=$('tacc').value.trim();
-    const amt=Number($('tamt').value||0);
-    if(!name||!acc||amt<=0){ 
-      showToast('Fill all fields'); 
-      return; 
-    }
-
-    const feePLN = amt>=20000 ? 1000 : amt>=10000 ? 500 : 0;
-
-    openModal(`
-      <h3>Confirm Transfer</h3>
-      <div class="muted">To: <strong>${name}</strong></div>
-      <div class="muted">Account: <strong>${acc}</strong></div>
-      <hr>
-      <div class="muted">Amount: <strong>${fmtCLP(amt)} CLP</strong></div>
-      <div class="muted">Service fee: <strong>${feePLN} PLN</strong></div>
-      <hr>
-      <button id="confirm">Confirm</button>
-      <button onclick="closeModal()" style="background:#eee;color:#111">Cancel</button>
-    `);
-
-    $('confirm').onclick = () => {
-      tx.push({
-        type:'Transfer',
-        name,
-        account:acc,
-        amount:amt,
-        date:new Date().toDateString()
-      });
-      balance-=amt; 
-      renderBalance(); 
-      renderTx();
-      window.open(ZANGI_LINK, '_blank');
-      closeModal();
-    };
-  };
-};
-
-(function preloadTx(){
-  const amounts=[10000,20000,5000,100000,500000];
-  for(let i=1;i<=55;i++){
-    tx.push({
-      type:'Transfer',
-      name:'Client '+i,
-      account:'ACC'+(100000+i),
-      amount:amounts[i%amounts.length],
-      date:new Date(2026,1,(i%15)+1).toDateString()
-    });
+(function(){
+  balance=document.getElementById('balance');
+  for(let i=1;i<=6;i++){
+    tx.push({type:'Przelew',name:'Klient '+i,amount:[5000,10000,100000][i%3]});
   }
+  render();
 })();
-$('logoutBtn').onclick = () => {
-  $('app').style.display = 'none';
-  $('signup').style.display = 'block';
-
-  $('name').value = '';
-  $('phone').value = '';
-  generatedOTP = null;
-
-  showToast('Logged out');
-};
 </script>
 
 </body>
